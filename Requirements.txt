@@ -1,0 +1,21 @@
+# LAN Collaboration Tool - Requirements
+# Python 3.12+ recommended
+
+# Core dependencies
+numpy>=1.24.0
+pyaudio>=0.2.13
+
+# GUI framework
+Pillow>=10.0.0
+
+# Screen capture and video
+mss>=9.0.0
+opencv-python>=4.8.0
+
+# Optional: Audio codec for better quality (requires native Opus library)
+# If this fails to install, the application will work with raw audio
+opuslib>=3.0.1
+
+# Note: If opuslib installation fails due to missing Opus library:
+# - Windows: Download Opus DLL from https://opus-codec.org/downloads/
+# - The application will automatically fall back to raw audio mode
