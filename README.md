@@ -337,7 +337,7 @@ This project is licensed under the MIT License - free to use, modify, and distri
 For issues, questions, or suggestions:
 - Create an issue on GitHub
 - Email: amit.ak0599@gmail.com
-- Documentation: [Wiki](https://github.com/yourusername/lan-collaboration-tool/wiki)
+- Documentation: [Wiki](https://github.com/AmitAK1/lan-collaboration-tool/)
 
 ---
 
