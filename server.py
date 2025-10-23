@@ -18,7 +18,8 @@ except Exception as e:
     print(f"[DEBUG] Opus import error: {e}")
 
 # --- Server Configuration ---
-HOST = '172.17.57.20'  # Your server's IP
+HOST = '0.0.0.0'  # Bind to all network interfaces (recommended for LAN)
+# Or use your specific IP: HOST = '172.16.141.51'
 PORT = 6543
 SERVER_FILES_DIR = "server_files"
 
@@ -224,7 +225,10 @@ def handle_client(client):
                         presenter_nick = nicknames[clients.index(client)]
                         print(f"[PRESENTER] {presenter_nick} is now presenting.")
                         broadcast_all(f"CMD:PRESENTER_SET:{presenter_nick}\n".encode('utf-8'))
+                        print(f"[PRESENTER] Broadcast presenter set message to all clients")
                     else:
+                        existing_presenter = nicknames[clients.index(current_presenter)]
+                        print(f"[PRESENTER] {nickname} denied - {existing_presenter} is already presenting")
                         client.send("[SERVER] Cannot start presenting, another user is active.\n".encode('utf-8'))
 
             # --- D. PRESENTER STOP (Your working code) ---
@@ -237,26 +241,44 @@ def handle_client(client):
             
             # --- E. SCREEN DATA (Your working code) ---
             elif message.startswith('CMD:SCREEN_DATA:'):
+                is_presenter = False
                 with presenter_lock:
-                    if current_presenter == client:
-                        try:
-                            filesize = int(message.split(':', 2)[2])
-                            image_data = b''
-                            bytes_received = 0
-                            while bytes_received < filesize:
-                                remaining = filesize - bytes_received
-                                chunk_size = min(4096, remaining)
-                                chunk = client.recv(chunk_size)
-                                if not chunk: raise Exception("Presenter disconnected")
-                                image_data += chunk
-                                bytes_received += len(chunk)
-                            
-                            broadcast(message_bytes, client) # Send header
-                            broadcast(image_data, client)     # Send data
-                        except Exception as e:
-                            print(f"[ERROR] Screen data relay failed: {e}")
-                            current_presenter = None
-                            broadcast_all("CMD:PRESENTER_SET:NONE\n".encode('utf-8'))
+                    is_presenter = (current_presenter == client)
+                
+                if is_presenter:
+                    try:
+                        filesize = int(message.split(':', 2)[2])
+                        print(f"[SCREEN] Receiving {filesize} bytes from {nickname}")
+                        image_data = b''
+                        bytes_received = 0
+                        client.settimeout(5.0)  # 5 second timeout for screen data
+                        
+                        while bytes_received < filesize:
+                            remaining = filesize - bytes_received
+                            chunk_size = min(8192, remaining)  # Larger chunks
+                            chunk = client.recv(chunk_size)
+                            if not chunk: 
+                                raise Exception(f"Presenter disconnected (received {bytes_received}/{filesize} bytes)")
+                            image_data += chunk
+                            bytes_received += len(chunk)
+                        
+                        print(f"[SCREEN] Received complete frame ({bytes_received} bytes), broadcasting...")
+                        client.settimeout(None)  # Reset to blocking
+                        broadcast(message_bytes, client) # Send header
+                        broadcast(image_data, client)     # Send data
+                        print(f"[SCREEN] Frame broadcast complete")
+                    except socket.timeout:
+                        print(f"[ERROR] Screen data timeout from {nickname} (received {bytes_received}/{filesize} bytes)")
+                        client.settimeout(None)
+                    except Exception as e:
+                        print(f"[ERROR] Screen data relay failed from {nickname}: {e}")
+                        client.settimeout(None)
+                        with presenter_lock:
+                            if current_presenter == client:
+                                current_presenter = None
+                                broadcast_all("CMD:PRESENTER_SET:NONE\n".encode('utf-8'))
+                else:
+                    print(f"[WARNING] {nickname} tried to send screen data but is not the presenter")
             
             # --- NEW: REPORT USER ---
             elif message.startswith('CMD:REPORT_USER:'):
@@ -379,11 +401,13 @@ def audio_server_thread():
             if server_running:
                 print(f"[AV] UDP server error: {e}")
 
-    udp_socket.close()
-    # --- NEW: Clean up decoders ---
+    # Clean shutdown
     with audio_lock:
         audio_decoders.clear()
-    # --- End ---
+    try:
+        udp_socket.close()
+    except:
+        pass
     print("[AV] UDP server shut down.")
 
 # --- (Audio Mixing & Broadcast Thread is identical to your Step 4) ---
@@ -454,7 +478,11 @@ def audio_broadcast_thread():
             if server_running:
                 print(f"[AUDIO] Mixing/Broadcast error: {e}")
 
-    udp_socket.close()
+    try:
+        udp_socket.close()
+    except:
+        pass
+    print("[AUDIO] Broadcast thread shut down.")
 
 # --- (shutdown_server is identical to your Step 4) ---
 def shutdown_server(server):
@@ -469,8 +497,10 @@ def shutdown_server(server):
     try:
         server.close()
     except: pass
+    
+    # Give daemon threads time to finish
+    time.sleep(0.5)
     print("[SHUTDOWN COMPLETE] Server has stopped.")
-    sys.exit(0)
 
 # --- MODIFIED: start_server Function ---
 def start_server():
@@ -514,6 +544,9 @@ def start_server():
     except Exception as e:
         print(f"[ERROR] Failed to start server: {e}")
         shutdown_server(server)
+    finally:
+        # Ensure clean exit
+        server_running = False
 
 
 if __name__ == "__main__":
@@ -521,4 +554,7 @@ if __name__ == "__main__":
         start_server()
     except KeyboardInterrupt:
         print("\n[INTERRUPTED] Server stopped by user.")
+    except Exception as e:
+        print(f"[FATAL ERROR] {e}")
+    finally:
         sys.exit(0)

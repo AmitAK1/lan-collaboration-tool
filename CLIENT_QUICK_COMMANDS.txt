@@ -1,0 +1,146 @@
+╔══════════════════════════════════════════════════════════════╗
+║         LAN COLLABORATION TOOL - CLIENT QUICK START          ║
+╚══════════════════════════════════════════════════════════════╝
+
+📋 WHAT YOU NEED:
+  • Python 3.8+ installed
+  • Same LAN network as the server
+  • Server IP address (ask the host)
+
+═══════════════════════════════════════════════════════════════
+
+🚀 FIRST TIME SETUP (ONE TIME ONLY):
+
+Windows PowerShell/CMD:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pip install numpy pyaudio Pillow mss opencv-python
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Linux/MacOS Terminal:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pip3 install numpy pyaudio Pillow mss opencv-python
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OR use automated setup:
+  • Windows: Double-click "setup_client.bat"
+  • All platforms: pip install -r Requirements.txt
+
+═══════════════════════════════════════════════════════════════
+
+▶️  RUNNING THE CLIENT:
+
+Windows:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Method 1: Double-click "start_client.bat"
+  Method 2: python client.py
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Linux/MacOS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  python3 client.py
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+═══════════════════════════════════════════════════════════════
+
+🔗 CONNECTING:
+
+When the dialog appears:
+  1. Enter Server IP (e.g., 192.168.1.100)
+  2. Enter your Nickname
+  3. Click OK
+
+═══════════════════════════════════════════════════════════════
+
+🔍 FINDING SERVER IP:
+
+Ask the server host to run this command:
+
+  Windows:     ipconfig
+  Linux/Mac:   ifconfig  OR  ip addr show
+
+Look for IPv4 Address (e.g., 192.168.x.x or 172.x.x.x)
+
+═══════════════════════════════════════════════════════════════
+
+⚡ QUICK COPY-PASTE COMMANDS:
+
+INSTALL EVERYTHING (Windows):
+  pip install numpy pyaudio Pillow mss opencv-python
+
+INSTALL EVERYTHING (Linux/Mac):
+  pip3 install numpy pyaudio Pillow mss opencv-python
+
+RUN CLIENT (Windows):
+  python client.py
+
+RUN CLIENT (Linux/Mac):
+  python3 client.py
+
+═══════════════════════════════════════════════════════════════
+
+🐛 COMMON ISSUES:
+
+❌ "pip not found"
+   → Add Python to PATH or use: python -m pip install ...
+
+❌ "PyAudio installation failed"
+   → Windows: Download from https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
+   → Linux: sudo apt-get install portaudio19-dev python3-pyaudio
+   → Mac: brew install portaudio && pip3 install pyaudio
+
+❌ "Permission denied"
+   → Use: pip install --user [package_name]
+
+❌ "Connection failed"
+   → Check if server is running
+   → Verify you're on the same network
+   → Check firewall settings
+   → Confirm correct server IP
+
+═══════════════════════════════════════════════════════════════
+
+📞 PORTS USED:
+  • TCP 6543 - Chat & Files
+  • UDP 6544 - Audio & Video
+
+Make sure these ports are not blocked by firewall!
+
+═══════════════════════════════════════════════════════════════
+
+✅ VERIFY INSTALLATION:
+
+Windows:
+  python -c "import numpy, pyaudio, PIL, mss, cv2; print('OK')"
+
+Linux/Mac:
+  python3 -c "import numpy, pyaudio, PIL, mss, cv2; print('OK')"
+
+If you see "OK", you're ready to go! 🎉
+
+═══════════════════════════════════════════════════════════════
+
+📂 PROJECT FILES YOU NEED:
+  ✓ client.py (main client application)
+  ✓ Requirements.txt (dependencies list)
+  ✓ start_client.bat (Windows launcher)
+
+Server files are NOT needed on client machines!
+
+═══════════════════════════════════════════════════════════════
+
+🎯 QUICK START SUMMARY:
+
+  1. Install Python 3.8+
+  2. Run: pip install numpy pyaudio Pillow mss opencv-python
+  3. Run: python client.py
+  4. Enter server IP and nickname
+  5. Enjoy! 🎉
+
+═══════════════════════════════════════════════════════════════
+
+For detailed setup guide, see: CLIENT_SETUP_GUIDE.md
+For project documentation, see: README.md
+
+╔══════════════════════════════════════════════════════════════╗
+║                     READY TO CONNECT!                         ║
+╚══════════════════════════════════════════════════════════════╝

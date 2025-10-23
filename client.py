@@ -29,7 +29,7 @@ CHUNK = 1024
 class ChatClient:
     def __init__(self):
         # --- (All state from Step 4) ---
-        self.HOST = simpledialog.askstring("Server IP", "Enter Server IP:", initialvalue="172.17.57.20") # Use your IP
+        self.HOST = simpledialog.askstring("Server IP", "Enter Server IP:", initialvalue="172.16.141.51") # Use your IP
         if not self.HOST: exit()
         self.PORT = 6543
         
@@ -390,26 +390,65 @@ class ChatClient:
         self.safe_ui_update(self.present_button.config, text="Start Presenting", bg="green")
 
     def screen_share_loop(self):
-        with mss.mss() as sct:
-            monitor = sct.monitors[1] 
-            while self.is_presenting:
-                try:
-                    sct_img = sct.grab(monitor)
-                    img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
-                    img.thumbnail((1280, 720)) 
-                    with io.BytesIO() as output:
-                        img.save(output, format='JPEG', quality=75)
-                        data = output.getvalue()
-                    
-                    header = f"CMD:SCREEN_DATA:{len(data)}\n".encode('utf-8')
-                    with self.socket_lock:
-                        self.client_socket.sendall(header)
-                        self.client_socket.sendall(data)
+        print("[PRESENTER] Starting screen share loop...")
+        try:
+            with mss.mss() as sct:
+                monitor = sct.monitors[1]
+                print(f"[PRESENTER] Monitor selected: {monitor}")
+                frame_count = 0
+                
+                while self.is_presenting and self.connected:
+                    try:
+                        # Capture screen
+                        sct_img = sct.grab(monitor)
+                        img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
+                        img.thumbnail((1280, 720)) 
                         
-                    time.sleep(0.1) # 10 FPS
-                except Exception as e:
-                    if self.is_presenting: print(f"[ERROR] Screen share loop failed: {e}")
-                    break
+                        # Convert to JPEG
+                        with io.BytesIO() as output:
+                            img.save(output, format='JPEG', quality=75)
+                            data = output.getvalue()
+                        
+                        frame_count += 1
+                        if frame_count == 1:
+                            print(f"[PRESENTER] First frame captured, size: {len(data)} bytes")
+                        
+                        # Send data
+                        header = f"CMD:SCREEN_DATA:{len(data)}\n".encode('utf-8')
+                        with self.socket_lock:
+                            if not self.connected:
+                                print("[PRESENTER] Connection lost, stopping...")
+                                break
+                            self.client_socket.sendall(header)
+                            self.client_socket.sendall(data)
+                        
+                        if frame_count % 30 == 0:  # Log every 30 frames
+                            print(f"[PRESENTER] Sent {frame_count} frames")
+                            
+                        time.sleep(0.1) # 10 FPS
+                        
+                    except socket.error as e:
+                        print(f"[ERROR] Screen share socket error: {e}")
+                        self.connected = False
+                        self.is_presenting = False
+                        self.safe_ui_update(self.display_message, f"[SYSTEM] Screen sharing stopped: Connection error\n")
+                        break
+                    except Exception as e:
+                        print(f"[ERROR] Screen share frame error: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        if self.is_presenting:
+                            break
+                            
+                print(f"[PRESENTER] Loop ended. Total frames sent: {frame_count}")
+                
+        except Exception as e:
+            print(f"[ERROR] Screen share initialization failed: {e}")
+            import traceback
+            traceback.print_exc()
+            self.is_presenting = False
+            
+        self.is_presenting = False
         print("[PRESENTER] Share thread stopped.")
         
     def show_screen_view_window(self):
